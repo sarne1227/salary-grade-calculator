@@ -123,7 +123,7 @@
 </div>
 <div id="app" class="wrap" style="display:none;"></div>
 <script>
-  const ACCESS_CODE = "peoplenculture2026"; // 팀 공유 접근코드 - 필요시 이 줄만 바꾸면 됨
+  const ACCESS_CODE = "people"; // 팀 공유 접근코드 - 필요시 이 줄만 바꾸면 됨
   function tryUnlock() {
     const input = document.getElementById("gateInput");
     if (input.value === ACCESS_CODE) {
@@ -236,6 +236,7 @@ function newRow(rowType) {
 let state = {
   info: { name: "", position: "", dept: "", team: "", hireDate: "", jobType: "법인정규직", entryType: "경력" },
   probation: { start: "", end: "", stepUpDate: "" },
+  contractPeriod: { start: "", end: "" },
   salary: { geup: "", hobong: "", hobongManual: false, year: "2026", baseSalary: "", growthSupport: "200000", mealAllowance: "200000", holidayBonusPerEvent: "500000", positionAllowance: "" },
   items: [newRow("edu"), newRow("external")],
 };
@@ -322,9 +323,10 @@ function computeSalaryDerived(computed) {
 
 // ==== 인쇄 전용 결과지 생성 (입력 폼 없이 텍스트로만) ====
 function buildPrintHTML(includeCareer) {
-  const info = state.info, probation = state.probation, salary = state.salary;
+  const info = state.info, probation = state.probation, salary = state.salary, contractPeriod = state.contractPeriod;
   const c = computeCareer();
   const d = computeSalaryDerived(c);
+  const showProbationSection = !CONTRACT_TYPES_NO_PROBATION.includes(info.jobType);
 
   const itemLine = (it, r) => {
     const meta = ROW_TYPE_META[it.rowType];
@@ -359,25 +361,25 @@ function buildPrintHTML(includeCareer) {
   return `<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><title>급호봉 산정 결과${includeCareer ? "" : " (요약)"}</title>
   <style>
     * { box-sizing: border-box; }
-    body { font-family: -apple-system, "Malgun Gothic", sans-serif; color: #1e293b; padding: 24px 32px; max-width: 720px; margin: 0 auto; }
-    h1 { font-size: 20px; margin: 0 0 4px; }
-    .sub { color: #94a3b8; font-size: 12px; margin: 0 0 20px; }
-    h2 { font-size: 15px; border-bottom: 2px solid #0f172a; padding-bottom: 6px; margin: 24px 0 10px; }
-    table { width: 100%; border-collapse: collapse; margin-bottom: 4px; }
-    .info-table td { padding: 5px 8px; font-size: 13px; border: 1px solid #e2e8f0; }
+    body { font-family: -apple-system, "Malgun Gothic", sans-serif; color: #1e293b; padding: 10px 26px; max-width: 720px; margin: 0 auto; font-size: 12.5px; }
+    h1 { font-size: 17px; margin: 0 0 2px; }
+    .sub { color: #94a3b8; font-size: 10px; margin: 0 0 8px; }
+    h2 { font-size: 13px; border-bottom: 2px solid #0f172a; padding-bottom: 3px; margin: 10px 0 5px; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 2px; }
+    .info-table td { padding: 3px 8px; font-size: 12px; border: 1px solid #e2e8f0; }
     .info-table td.lbl { background: #f8fafc; color: #64748b; width: 90px; }
-    .ptable { font-size: 12px; margin-bottom: 14px; }
-    .ptable th, .ptable td { border: 1px solid #e2e8f0; padding: 5px 6px; text-align: center; white-space: nowrap; }
+    .ptable { font-size: 11px; margin-bottom: 6px; }
+    .ptable th, .ptable td { border: 1px solid #e2e8f0; padding: 3px 6px; text-align: center; white-space: nowrap; }
     .ptable td:nth-child(2) { white-space: normal; }
     .ptable th { background: #f8fafc; }
-    .psummary td { padding: 4px 8px; font-size: 13px; }
+    .psummary td { padding: 2px 8px; font-size: 12px; }
     .psummary td:last-child { text-align: right; font-weight: 600; }
-    .ptotal td { border-top: 2px solid #0f172a; font-weight: 700; font-size: 14px; padding-top: 8px; }
-    .amt-table td { padding: 5px 8px; font-size: 13px; }
+    .ptotal td { border-top: 2px solid #0f172a; font-weight: 700; font-size: 13px; padding-top: 4px; }
+    .amt-table td { padding: 3px 8px; font-size: 12px; }
     .amt-table td:last-child { text-align: right; }
-    .amt-table tr.total td { border-top: 2px solid #0f172a; font-weight: 700; font-size: 15px; padding-top: 8px; }
-    .note { font-size: 11px; color: #94a3b8; margin: 2px 0 8px; }
-    @media print { @page { margin: 14mm; } }
+    .amt-table tr.total td { border-top: 2px solid #0f172a; font-weight: 700; font-size: 13px; padding-top: 4px; }
+    .note { font-size: 10px; color: #94a3b8; margin: 1px 0 4px; }
+    @media print { @page { margin: 8mm; } body { padding: 0; } }
   </style></head>
   <body>
     <h1>급호봉 산정 결과${includeCareer ? "" : " (요약)"}</h1>
@@ -392,19 +394,21 @@ function buildPrintHTML(includeCareer) {
 
     ${careerSection}
 
-    <h2>수습기간 · 호봉상승일</h2>
+    <h2>${showProbationSection ? "수습기간 · 호봉상승일" : "계약기간"}</h2>
     <table class="info-table">
-      <tr><td class="lbl">수습기간</td><td>${probation.start || "-"} ~ ${probation.end || "-"}</td></tr>
-      <tr><td class="lbl">호봉상승일</td><td>${probation.stepUpDate || "-"}</td></tr>
+      ${showProbationSection
+        ? `<tr><td class="lbl">수습기간</td><td>${probation.start || "-"} ~ ${probation.end || "-"}</td></tr>
+           <tr><td class="lbl">호봉상승일</td><td>${probation.stepUpDate || "-"}</td></tr>`
+        : `<tr><td class="lbl">계약기간</td><td>${contractPeriod.start || "-"} ~ ${contractPeriod.end || "-"}</td></tr>`}
     </table>
 
     <h2>3. 최종 급여</h2>
     <table class="amt-table">
       <tr><td>급 / 호봉 / 기준연도</td><td>${esc(salary.geup) || "-"}급 / ${esc(salary.hobong) || "-"}호봉 / ${salary.year}년</td></tr>
-      <tr><td>기본급</td><td>${fmtWon(salary.baseSalary)}</td></tr>
-      <tr><td>성장지원비</td><td>${fmtWon(salary.growthSupport)}</td></tr>
-      <tr><td>급식비</td><td>${fmtWon(salary.mealAllowance)}</td></tr>
-      <tr class="total"><td>월 급여</td><td>${fmtWon(d.monthlyPay)}</td></tr>
+      <tr><td>기본급</td><td>${fmtWon(salary.baseSalary)}${showProbationSection ? ` <span class="note" style="margin:0;">(수습시 90%: ${fmtWon((Number(salary.baseSalary)||0)*0.9)})</span>` : ""}</td></tr>
+      <tr><td>성장지원비</td><td>${fmtWon(salary.growthSupport)}${showProbationSection ? ` <span class="note" style="margin:0;">(수습시 90%: ${fmtWon((Number(salary.growthSupport)||0)*0.9)})</span>` : ""}</td></tr>
+      <tr><td>급식비</td><td>${fmtWon(salary.mealAllowance)}${showProbationSection ? ` <span class="note" style="margin:0;">(수습시 90%: ${fmtWon((Number(salary.mealAllowance)||0)*0.9)})</span>` : ""}</td></tr>
+      <tr class="total"><td>월 급여</td><td>${fmtWon(d.monthlyPay)}${showProbationSection ? ` <span class="note" style="margin:0;font-weight:600;">(수습시 90%: ${fmtWon(d.monthlyPay*0.9)})</span>` : ""}</td></tr>
     </table>
     <p class="note">시간외수당(1시간 기준): ${fmtWon(d.overtimeHourlyRate)} · 명절수당(연): ${fmtWon(d.holidayBonusAnnual)} · 직책수당(월): ${fmtWon(salary.positionAllowance)}</p>
     <table class="amt-table">
@@ -428,12 +432,14 @@ function segKey(scope, field, itemId) { return scope + "-" + field + (itemId != 
 function getCurrentDateValue(scope, field, itemId) {
   if (scope === "info") return state.info[field];
   if (scope === "probation") return state.probation[field];
+  if (scope === "contract") return state.contractPeriod[field];
   const it = state.items.find(x => x.id === itemId);
   return it ? it[field] : "";
 }
 function setCurrentDateValue(scope, field, itemId, value) {
   if (scope === "info") { state.info[field] = value; return; }
   if (scope === "probation") { state.probation[field] = value; return; }
+  if (scope === "contract") { state.contractPeriod[field] = value; return; }
   const it = state.items.find(x => x.id === itemId);
   if (it) it[field] = value;
 }
@@ -479,7 +485,7 @@ function handleSegInput(scope, field, monthOnly, part, rawValue, itemId) {
   setCurrentDateValue(scope, field, itemId, newValue);
 
   if (scope === "info" && field === "hireDate") recalcProbationAuto();
-  if (scope !== "probation") { const c = computeCareer(); recalcStepUp(c); syncHobongIfAuto(c); }
+  if (scope !== "probation" && scope !== "contract") { const c = computeCareer(); recalcStepUp(c); syncHobongIfAuto(c); }
 
   render();
   const focusId = nextFocusId || sameFocusId;
@@ -647,6 +653,7 @@ function render() {
       ${c.rows.map(r => itemRowHTML(state.items.find(x => x.id === r.id), r)).join("")}
     </div>
 
+    ${showProbation ? `
     <div class="card card-amber">
       <p class="card-label amber">수습기간 · 호봉상승일</p>
       <div class="field" style="margin-bottom:10px;">
@@ -662,6 +669,19 @@ function render() {
         ${segInputHTML("probation", "stepUpDate", null, false)}
       </div>
     </div>
+    ` : `
+    <div class="card card-amber">
+      <p class="card-label amber">계약기간</p>
+      <div class="field">
+        <label>계약 시작일 ~ 종료일 (수기 입력)</label>
+        <div class="item-dates">
+          ${segInputHTML("contract", "start", null, false)}
+          <span class="hint">~</span>
+          ${segInputHTML("contract", "end", null, false)}
+        </div>
+      </div>
+    </div>
+    `}
 
     <div class="card">
       <p class="card-label">합산 내역</p>
