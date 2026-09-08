@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>급호봉 계산기</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, "Malgun Gothic", "맑은 고딕", "NanumBarunGothic", "나눔바른고딕", sans-serif; color: #1e293b; font-weight: 700; }
+  * { font-weight: 700 !important; }
+  .wrap { max-width: 480px; margin: 0 auto; padding: 24px 16px 60px; }
+  .title-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+  .eyebrow { font-size: 11px; font-weight: 700; letter-spacing: .08em; color: #0f766e; text-transform: uppercase; margin: 0; }
+  h1 { font-size: 20px; font-weight: 700; color: #0f172a; margin: 2px 0 0; }
+  .badge-total { display: flex; align-items: center; gap: 6px; background: #fff; border: 1px solid #e2e8f0; border-radius: 999px; padding: 5px 12px; box-shadow: 0 1px 2px rgba(0,0,0,.05); white-space: nowrap; }
+  .badge-total .lbl { font-size: 11px; color: #94a3b8; }
+  .badge-total .val { font-size: 17px; font-weight: 700; color: #0f172a; }
+  .btnrow { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; margin: 10px 0 20px; }
+  .btn { font-size: 12px; font-weight: 500; border-radius: 999px; padding: 8px 12px; border: 1px solid transparent; cursor: pointer; }
+  .btn-teal { color: #0f766e; background: #f0fdfa; border-color: #99f6e4; }
+  .btn-teal:hover { background: #ccfbf1; }
+  .btn-dark { color: #fff; background: #0f172a; }
+  .btn-dark:hover { background: #1e293b; }
+  .btn-sky { color: #0369a1; background: #f0f9ff; border-color: #7dd3fc; }
+  .btn-sky:hover { background: #e0f2fe; }
+  .btn-violet { color: #6d28d9; background: #f5f3ff; border-color: #c4b5fd; }
+  .btn-violet:hover { background: #ede9fe; }
+  .btn-slate { color: #475569; background: #f8fafc; border-color: #cbd5e1; }
+  .btn-slate:hover { background: #f1f5f9; }
+  .section-title { font-size: 14px; font-weight: 700; color: #0f172a; margin: 0 0 8px; }
+  .card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+  .card-amber { background: #fffbeb; border: 2px solid #fde68a; }
+  .card-label { font-size: 11px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: .05em; margin: 0 0 10px; }
+  .card-label.amber { color: #b45309; font-weight: 700; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+  .field label { display: block; font-size: 11px; color: #94a3b8; margin-bottom: 4px; }
+  .field.span2 { grid-column: span 2; }
+  input[type=text], input[type=number], input[type=date], input[type=month], select {
+    width: 100%; font-size: 14px; border: 1px solid #e2e8f0; border-radius: 8px; padding: 7px 10px;
+    font-family: inherit; background: #fff; color: #1e293b;
+  }
+  input:focus, select:focus { outline: none; box-shadow: 0 0 0 1px #14b8a6; border-color: #14b8a6; }
+  .toggle-row { display: flex; gap: 8px; }
+  .toggle-btn { flex: 1; font-size: 14px; font-weight: 500; border-radius: 8px; padding: 7px 0; border: 1px solid #e2e8f0; background: #fff; color: #64748b; cursor: pointer; }
+  .toggle-btn.active { background: #0d9488; border-color: #0d9488; color: #fff; }
+  .item-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px; margin-bottom: 10px; }
+  .item-head { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .item-head select, .item-head input { flex: 1; min-width: 0; }
+  .pill { font-size: 12px; font-weight: 600; border-radius: 999px; padding: 3px 9px; white-space: nowrap; flex-shrink: 0; }
+  .pill-teal { background: #ccfbf1; color: #0f766e; }
+  .pill-sky { background: #e0f2fe; color: #0369a1; }
+  .pill-violet { background: #ede9fe; color: #6d28d9; }
+  .pill-slate { background: #e2e8f0; color: #475569; }
+  .icon-btn { background: none; border: none; color: #cbd5e1; cursor: pointer; padding: 2px 4px; font-size: 15px; flex-shrink: 0; line-height: 1; }
+  .icon-btn:hover { color: #ef4444; }
+  .item-sub { display: flex; gap: 6px; margin-bottom: 10px; }
+  .item-dates { display: flex; align-items: center; gap: 6px; margin-bottom: 12px; }
+  .item-dates input { font-size: 12px; }
+  .seg-group { display: inline-flex; align-items: center; gap: 2px; border: 1px solid #e2e8f0; border-radius: 8px; padding: 6px 8px; background: #fff; }
+  .seg-group:focus-within { box-shadow: 0 0 0 1px #14b8a6; border-color: #14b8a6; }
+  .seg-group input { border: none !important; padding: 0 !important; text-align: center; font-size: 15px; box-shadow: none !important; letter-spacing: -0.5px; }
+  .seg-group input.y { width: 56px; }
+  .seg-group input.m, .seg-group input.d { width: 38px; }
+  .seg-group input:focus { box-shadow: none !important; }
+  .seg-sep { color: #cbd5e1; font-size: 12px; }
+  .hint { font-size: 10px; color: #94a3b8; white-space: nowrap; flex-shrink: 0; }
+  .stat-grid { display: grid; gap: 6px; }
+  .stat-grid.cols2 { grid-template-columns: 1fr 1fr; }
+  .stat-grid.cols3 { grid-template-columns: 1fr 1fr 1fr; }
+  .stat { background: #f8fafc; border-radius: 8px; padding: 6px 6px; text-align: center; }
+  .stat p.lbl { font-size: 10px; color: #94a3b8; margin: 0 0 2px; }
+  .stat p.val { font-size: 13px; font-weight: 600; color: #334155; margin: 0; }
+  .stat.teal { background: #f0fdfa; }
+  .stat.teal p.val { color: #0f766e; font-weight: 700; }
+  .stat.amber { background: #fffbeb; }
+  .stat.amber p.val, .stat.amber input { color: #92400e; }
+  .stat select, .stat input { font-size: 12px; font-weight: 600; text-align: center; background: transparent; border: none; padding: 0; width: 100%; }
+  .stat select:focus, .stat input:focus { box-shadow: none; }
+  .row-line { display: flex; justify-content: space-between; font-size: 14px; padding: 3px 0; }
+  .row-line .label { color: #64748b; }
+  .row-line .value { color: #1e293b; font-weight: 500; }
+  .total-line { border-top: 1px solid #e2e8f0; margin-top: 10px; padding-top: 10px; display: flex; justify-content: space-between; }
+  .total-line .label { font-weight: 600; color: #0f172a; }
+  .total-line .value { font-weight: 700; color: #0f172a; }
+  .divider { border-top: 1px solid #e2e8f0; margin-top: 16px; padding-top: 16px; }
+  .amount-row { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+  .amount-row .lbl { font-size: 14px; color: #64748b; padding-top: 6px; }
+  .amount-input-wrap { text-align: right; }
+  .amount-input-wrap input { width: 150px; text-align: right; }
+  .amount-suffix { display: flex; align-items: center; gap: 6px; justify-content: flex-end; }
+  .amount-suffix span.won { font-size: 12px; color: #94a3b8; }
+  .probation-note { font-size: 11px; color: #94a3b8; margin-top: 2px; }
+  .small-note { font-size: 11px; color: #94a3b8; margin-top: 4px; }
+  .foot-note { font-size: 12px; color: #94a3b8; text-align: center; margin-top: 16px; }
+  .lookup-note { font-size: 12px; margin-bottom: 12px; }
+  .lookup-ok { color: #0d9488; }
+  .lookup-warn { color: #d97706; }
+  @media print {
+    .no-print { display: none !important; }
+    .print-hide-career { display: none !important; }
+    body { background: #fff !important; }
+    .card, .item-card { box-shadow: none !important; border: 1px solid #e2e8f0 !important; break-inside: avoid; }
+  }
+  .gate-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+  .gate-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 32px 28px; max-width: 320px; width: 100%; text-align: center; box-shadow: 0 4px 16px rgba(0,0,0,.06); }
+  .gate-title { font-size: 18px; margin: 0 0 6px; }
+  .gate-sub { font-size: 13px; color: #64748b; margin: 0 0 18px; }
+  .gate-input { width: 100%; text-align: center; font-size: 15px; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px; margin-bottom: 10px; }
+  .gate-btn { width: 100%; padding: 10px 0; }
+  .gate-error { color: #ef4444; font-size: 12px; margin-top: 10px; }
+</style>
+</head>
+<body>
+<div id="gate" class="gate-wrap">
+  <div class="gate-card">
+    <p class="gate-title">🔒 급호봉 계산기</p>
+    <p class="gate-sub">피플팀 전용 도구입니다. 접근 코드를 입력해주세요.</p>
+    <input id="gateInput" type="password" class="gate-input" placeholder="접근 코드" autocomplete="off">
+    <button class="btn btn-dark gate-btn" onclick="tryUnlock()">입장</button>
+    <p id="gateError" class="gate-error" style="display:none;">코드가 올바르지 않아요. 다시 확인해줘.</p>
+  </div>
+</div>
+<div id="app" class="wrap" style="display:none;"></div>
+<script>
+  const ACCESS_CODE = "peoplenculture2026"; // 팀 공유 접근코드 - 필요시 이 줄만 바꾸면 됨
+  function tryUnlock() {
+    const input = document.getElementById("gateInput");
+    if (input.value === ACCESS_CODE) {
+      localStorage.setItem("salaryCalcAccess", "granted");
+      document.getElementById("gate").style.display = "none";
+      document.getElementById("app").style.display = "block";
+    } else {
+      document.getElementById("gateError").style.display = "block";
+    }
+  }
+  document.addEventListener("DOMContentLoaded", function () {
+    const gi = document.getElementById("gateInput");
+    if (gi) gi.addEventListener("keydown", function (e) { if (e.key === "Enter") tryUnlock(); });
+    if (localStorage.getItem("salaryCalcAccess") === "granted") {
+      document.getElementById("gate").style.display = "none";
+      document.getElementById("app").style.display = "block";
+    }
+  });
+</script>
+<script>
+// ==== 계산 로직 ====
+function diffMonths(startStr, endStr) {
+  if (!startStr || !endStr) return 0;
+  const start = new Date(startStr);
+  const endPlus = new Date(endStr);
+  endPlus.setDate(endPlus.getDate() + 1);
+  if (endPlus <= start) return 0;
+  let y = endPlus.getFullYear() - start.getFullYear();
+  let m = endPlus.getMonth() - start.getMonth();
+  let d = endPlus.getDate() - start.getDate();
+  if (d < 0) m -= 1;
+  return Math.max(0, y * 12 + m);
+}
+function addMonthsMinusDay(dateStr, months) {
+  if (!dateStr) return "";
+  const d = new Date(dateStr);
+  d.setMonth(d.getMonth() + months);
+  d.setDate(d.getDate() - 1);
+  const pad = n => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+function addMonths(dateStr, months) {
+  if (!dateStr) return "";
+  const d = new Date(dateStr);
+  d.setMonth(d.getMonth() + months);
+  const pad = n => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+function nextStepUpAnchor(dateStr) {
+  if (!dateStr) return "";
+  const d = new Date(dateStr);
+  const y = d.getFullYear();
+  const jan1 = new Date(y, 0, 1);
+  const jul1 = new Date(y, 6, 1);
+  const pad = n => String(n).padStart(2, "0");
+  const fmt = dt => `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())}`;
+  if (d <= jan1) return fmt(jan1);
+  if (d <= jul1) return fmt(jul1);
+  return fmt(new Date(y + 1, 0, 1));
+}
+function fmtYM(months) {
+  if (!months) return "0개월";
+  const y = Math.floor(months / 12);
+  const m = months % 12;
+  if (y === 0) return `${m}개월`;
+  if (m === 0) return `${y}년`;
+  return `${y}년 ${m}개월`;
+}
+function fmtWon(n) { return `${Math.round(n || 0).toLocaleString("ko-KR")}원`; }
+function esc(s) { return (s || "").toString().replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+
+const DEGREE_OPTIONS = [
+  { id: "highschool", label: "고졸", grade: 1 },
+  { id: "assoc", label: "전문학사", grade: 3 },
+  { id: "bachelor", label: "4년제 대학교", grade: 5 },
+  { id: "master", label: "석사 취득", grade: 1 },
+  { id: "phd", label: "박사 취득", grade: 2 },
+];
+
+const SALARY_TABLES = {
+"2026": {
+    1: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0, 10: 0, 11: 0, 12: 0, 13: 0, 14: 0, 15: 0, 16: 0, 17: 0, 18: 0, 19: 4554000, 20: 4643000, 21: 4736000, 22: 4862000, 23: 4993000, 24: 5118000, 25: 5250000, 26: 5384000, 27: 5510000, 28: 5641000, 29: 5772000, 30: 5896000, 31: 6030000, 32: 6153000, 33: 6285000, 34: 6416000, 35: 6543000, 36: 6676000, 37: 6802000, 38: 6891000, 39: 6976000, 40: 7065000, 41: 7148000 },
+    2: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0, 10: 0, 11: 0, 12: 0, 13: 0, 14: 0, 15: 0, 16: 0, 17: 4124000, 18: 4204000, 19: 4288000, 20: 4397000, 21: 4508000, 22: 4615000, 23: 4717000, 24: 4828000, 25: 4938000, 26: 5045000, 27: 5150000, 28: 5262000, 29: 5368000, 30: 5479000, 31: 5585000, 32: 5700000, 33: 5802000, 34: 5907000, 35: 6013000, 36: 6123000, 37: 6229000, 38: 6340000, 39: 6447000, 40: 6555000, 41: 6662000 },
+    3: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0, 10: 0, 11: 0, 12: 0, 13: 0, 14: 3748000, 15: 3820000, 16: 3896000, 17: 3993000, 18: 4085000, 19: 4186000, 20: 4281000, 21: 4376000, 22: 4473000, 23: 4569000, 24: 4675000, 25: 4767000, 26: 4860000, 27: 4958000, 28: 5056000, 29: 5150000, 30: 5250000, 31: 5347000, 32: 5472000, 33: 5638000, 34: 5735000, 35: 5827000, 36: 5926000, 37: 6024000, 38: 6117000, 39: 6214000, 40: 6313000, 41: 6409000 },
+    4: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0, 10: 0, 11: 3418000, 12: 3483000, 13: 3552000, 14: 3645000, 15: 3737000, 16: 3826000, 17: 3917000, 18: 4006000, 19: 4099000, 20: 4189000, 21: 4280000, 22: 4375000, 23: 4468000, 24: 4557000, 25: 4646000, 26: 4741000, 27: 4833000, 28: 4928000, 29: 5017000, 30: 5100000, 31: 5196000, 32: 5288000, 33: 5379000, 34: 5469000, 35: 5560000, 36: 5657000, 37: 5749000, 38: 5836000, 39: 5929000, 40: 6022000, 41: 6113000 },
+    5: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 2892000, 8: 2953000, 9: 3017000, 10: 3111000, 11: 3205000, 12: 3293000, 13: 3397000, 14: 3486000, 15: 3580000, 16: 3673000, 17: 3764000, 18: 3857000, 19: 3947000, 20: 4044000, 21: 4140000, 22: 4233000, 23: 4326000, 24: 4419000, 25: 4510000, 26: 4601000, 27: 4695000, 28: 4786000, 29: 4886000, 30: 4977000, 31: 5070000, 32: 5163000, 33: 5258000, 34: 5349000, 35: 5441000, 36: 5540000, 37: 5633000, 38: 5724000, 39: 5814000, 40: 5910000, 41: 6001000 },
+    6: { 1: 2232000, 2: 2286000, 3: 2343000, 4: 2367000, 5: 2461000, 6: 2562000, 7: 2656000, 8: 2749000, 9: 2847000, 10: 2944000, 11: 3042000, 12: 3195000, 13: 3289000, 14: 3387000, 15: 3475000, 16: 3578000, 17: 3674000, 18: 3767000, 19: 3863000, 20: 3961000, 21: 4056000, 22: 4155000, 23: 4249000, 24: 4339000, 25: 4440000, 26: 4538000, 27: 4630000, 28: 4732000, 29: 4824000, 30: 4917000, 31: 5012000, 32: 5111000, 33: 5210000, 34: 5304000, 35: 5400000, 36: 5493000, 37: 5591000, 38: 5685000, 39: 5781000, 40: 5878000, 41: 5975000 },
+    7: { 1: 2095000, 2: 2147000, 3: 2201000, 4: 2223000, 5: 2315000, 6: 2414000, 7: 2509000, 8: 2604000, 9: 2716000, 10: 2852000, 11: 2950000, 12: 3044000, 13: 3142000, 14: 3234000, 15: 3331000, 16: 3430000, 17: 3524000, 18: 3623000, 19: 3717000, 20: 3811000, 21: 3909000, 22: 4005000, 23: 4103000, 24: 4197000, 25: 4292000, 26: 4389000, 27: 4486000, 28: 4580000, 29: 4679000, 30: 4771000, 31: 4867000, 32: 4967000, 33: 5061000, 34: 5156000, 35: 5253000, 36: 5349000, 37: 5442000, 38: 5538000, 39: 5641000, 40: 5729000, 41: 5829000 },
+  },
+};
+
+const ROW_TYPE_META = {
+  edu: { label: "학력", order: 0, pill: "pill-teal" },
+  external: { label: "외부경력", order: 1, pill: "pill-sky" },
+  wvcareer: { label: "월드비전 경력", order: 2, pill: "pill-violet" },
+  military: { label: "군복무", order: 3, pill: "pill-slate" },
+};
+
+const JOB_TYPE_OPTIONS = ["법인정규직", "후원상담직", "일반계약직", "프로젝트계약직", "대체계약직"];
+const CONTRACT_TYPES_NO_PROBATION = ["일반계약직", "프로젝트계약직", "대체계약직"];
+
+let nextId = 1;
+function newRow(rowType) {
+  const base = { id: nextId++, rowType, start: "", end: "" };
+  if (rowType === "edu") return Object.assign(base, { degree: "bachelor", school: "", major: "" });
+  return Object.assign(base, { detail: "", rate: 1, finalOverride: "" });
+}
+
+// ==== state ====
+let state = {
+  info: { name: "", position: "", dept: "", team: "", hireDate: "", jobType: "법인정규직", entryType: "경력" },
+  probation: { start: "", end: "", stepUpDate: "" },
+  salary: { geup: "", hobong: "", hobongManual: false, year: "2026", baseSalary: "", growthSupport: "200000", mealAllowance: "200000", holidayBonusPerEvent: "500000", positionAllowance: "" },
+  items: [newRow("edu"), newRow("external")],
+};
+
+function withFocus(fn) {
+  const active = document.activeElement;
+  const id = active && active.id;
+  let start, end;
+  if (active && typeof active.selectionStart === "number") { start = active.selectionStart; end = active.selectionEnd; }
+  fn();
+  if (id) {
+    const el = document.getElementById(id);
+    if (el) {
+      el.focus();
+      if (start != null && el.setSelectionRange) { try { el.setSelectionRange(start, end); } catch(e) {} }
+    }
+  }
+}
+
+function recalcProbationAuto() {
+  if (!state.info.hireDate) return;
+  const months = state.info.entryType === "경력" ? 6 : 3;
+  state.probation.start = state.info.hireDate;
+  state.probation.end = addMonthsMinusDay(state.info.hireDate, months);
+}
+
+function computeCareer() {
+  const rows = state.items.map(it => {
+    if (it.rowType === "edu") {
+      const opt = DEGREE_OPTIONS.find(d => d.id === it.degree);
+      const actual = diffMonths(it.start, it.end);
+      return Object.assign({}, it, { actual, autoRecognized: 0, recognized: 0, grade: opt.grade, remainder: 0 });
+    }
+    const actual = diffMonths(it.start, it.end);
+    const rate = it.rowType === "external" ? it.rate : 1;
+    const autoRecognized = actual * rate;
+    const recognized = (it.finalOverride !== "" && it.finalOverride !== undefined) ? Number(it.finalOverride) : autoRecognized;
+    const grade = Math.floor(recognized / 12);
+    const remainder = Math.round((recognized - grade * 12) * 100) / 100;
+    return Object.assign({}, it, { actual, autoRecognized, recognized, grade, remainder });
+  });
+  const sumBy = rt => rows.filter(r => r.rowType === rt).reduce((s, r) => s + r.grade, 0);
+  const eduGrade = sumBy("edu"), externalGrade = sumBy("external"), wvGrade = sumBy("wvcareer"), militaryGrade = sumBy("military");
+  const remainderSum = rows.filter(r => r.rowType !== "edu").reduce((s, r) => s + r.remainder, 0);
+  const bonusGrade = Math.floor(remainderSum / 12);
+  const finalRemainder = Math.round((remainderSum - bonusGrade * 12) * 100) / 100;
+  const total = eduGrade + externalGrade + wvGrade + militaryGrade + bonusGrade;
+  const sorted = rows.slice().sort((a, b) => ROW_TYPE_META[a.rowType].order - ROW_TYPE_META[b.rowType].order);
+  return { rows: sorted, eduGrade, externalGrade, wvGrade, militaryGrade, remainderSum, bonusGrade, finalRemainder, total };
+}
+
+function recalcStepUp(computed) {
+  if (!state.info.hireDate) return;
+  const remainder = Math.round(computed.finalRemainder) || 0;
+  const requiredMonths = remainder > 0 ? 12 - remainder : 12;
+  const threshold = addMonths(state.info.hireDate, requiredMonths);
+  state.probation.stepUpDate = nextStepUpAnchor(threshold);
+}
+function syncHobongIfAuto(computed) {
+  if (state.salary.hobongManual) return;
+  state.salary.hobong = String(computed.total);
+  const d = computeSalaryDerived(computed);
+  if (d.lookedUpBase) state.salary.baseSalary = String(d.lookedUpBase);
+}
+
+function computeSalaryDerived(computed) {
+  const s = state.salary;
+  const g = Number(s.geup), h = Number(s.hobong);
+  let lookedUpBase = null;
+  if (g && h) {
+    const table = SALARY_TABLES[s.year];
+    const val = table && table[g] && table[g][h];
+    lookedUpBase = val || null;
+  }
+  const monthlyPay = (Number(s.baseSalary) || 0) + (Number(s.growthSupport) || 0) + (Number(s.mealAllowance) || 0);
+  const holidayBonusAnnual = (Number(s.holidayBonusPerEvent) || 0) * 2;
+  const monthlyHolidayPortion = Math.round(holidayBonusAnnual / 12);
+  const overtimeBase = monthlyPay + (Number(s.positionAllowance) || 0) + monthlyHolidayPortion;
+  const overtimeHourlyRate = (overtimeBase / 209) * 1.5;
+  const positionAllowanceAnnual = (Number(s.positionAllowance) || 0) * 12;
+  const annualTotal = monthlyPay * 12 + holidayBonusAnnual + positionAllowanceAnnual;
+  return { lookedUpBase, monthlyPay, holidayBonusAnnual, overtimeHourlyRate, positionAllowanceAnnual, annualTotal };
+}
+
+// ==== 인쇄 전용 결과지 생성 (입력 폼 없이 텍스트로만) ====
+function buildPrintHTML(includeCareer) {
+  const info = state.info, probation = state.probation, salary = state.salary;
+  const c = computeCareer();
+  const d = computeSalaryDerived(c);
+
+  const itemLine = (it, r) => {
+    const meta = ROW_TYPE_META[it.rowType];
+    let detail = "";
+    if (it.rowType === "edu") {
+      const deg = DEGREE_OPTIONS.find(x => x.id === it.degree);
+      detail = `${deg ? deg.label : ""} · ${esc(it.school)} ${esc(it.major)}`.trim();
+    } else {
+      detail = esc(it.detail) || "-";
+    }
+    const period = it.start && it.end ? `${it.start} ~ ${it.end}` : "-";
+    const rateTxt = it.rowType === "external" ? (it.rate == 1 ? "상 100%" : it.rate == 0.5 ? "중 50%" : "하 0%") : "100%";
+    return `<tr><td>${meta.label}</td><td>${detail}</td><td>${period}</td><td>${fmtYM(r.actual)}</td><td>${rateTxt}</td><td>${r.grade}호봉</td><td>${r.remainder > 0 ? "+" + r.remainder : "0"}개월</td></tr>`;
+  };
+
+  const careerSection = !includeCareer ? "" : `
+    <h2>2. 경력산정</h2>
+    <table class="ptable">
+      <thead><tr><th>구분</th><th>세부</th><th>기간</th><th>개월수</th><th>인정률</th><th>호봉</th><th>잔여개월</th></tr></thead>
+      <tbody>${c.rows.map(r => itemLine(state.items.find(x => x.id === r.id), r)).join("")}</tbody>
+    </table>
+    <table class="psummary">
+      <tr><td>학력 최종 호봉</td><td>${c.eduGrade}호봉</td></tr>
+      <tr><td>외부경력 최종 호봉</td><td>${c.externalGrade}호봉</td></tr>
+      <tr><td>월드비전 최종 호봉</td><td>${c.wvGrade}호봉</td></tr>
+      <tr><td>군복무 최종 호봉</td><td>${c.militaryGrade}호봉</td></tr>
+      <tr><td>잔여개월 합산</td><td>${c.remainderSum}개월</td></tr>
+      <tr><td>잔여개월 재환산 호봉</td><td>${c.bonusGrade}호봉 (잔여 ${c.finalRemainder}개월)</td></tr>
+      <tr class="ptotal"><td>최종 호봉</td><td>${c.total}호봉</td></tr>
+    </table>`;
+
+  return `<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><title>급호봉 산정 결과${includeCareer ? "" : " (요약)"}</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: -apple-system, "Malgun Gothic", sans-serif; color: #1e293b; padding: 24px 32px; max-width: 720px; margin: 0 auto; }
+    h1 { font-size: 20px; margin: 0 0 4px; }
+    .sub { color: #94a3b8; font-size: 12px; margin: 0 0 20px; }
+    h2 { font-size: 15px; border-bottom: 2px solid #0f172a; padding-bottom: 6px; margin: 24px 0 10px; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 4px; }
+    .info-table td { padding: 5px 8px; font-size: 13px; border: 1px solid #e2e8f0; }
+    .info-table td.lbl { background: #f8fafc; color: #64748b; width: 90px; }
+    .ptable { font-size: 12px; margin-bottom: 14px; }
+    .ptable th, .ptable td { border: 1px solid #e2e8f0; padding: 5px 6px; text-align: center; white-space: nowrap; }
+    .ptable td:nth-child(2) { white-space: normal; }
+    .ptable th { background: #f8fafc; }
+    .psummary td { padding: 4px 8px; font-size: 13px; }
+    .psummary td:last-child { text-align: right; font-weight: 600; }
+    .ptotal td { border-top: 2px solid #0f172a; font-weight: 700; font-size: 14px; padding-top: 8px; }
+    .amt-table td { padding: 5px 8px; font-size: 13px; }
+    .amt-table td:last-child { text-align: right; }
+    .amt-table tr.total td { border-top: 2px solid #0f172a; font-weight: 700; font-size: 15px; padding-top: 8px; }
+    .note { font-size: 11px; color: #94a3b8; margin: 2px 0 8px; }
+    @media print { @page { margin: 14mm; } }
+  </style></head>
+  <body>
+    <h1>급호봉 산정 결과${includeCareer ? "" : " (요약)"}</h1>
+
+    <h2>1. 기본정보</h2>
+    <table class="info-table">
+      <tr><td class="lbl">성명</td><td>${esc(info.name)}</td><td class="lbl">직책</td><td>${esc(info.position)}</td></tr>
+      <tr><td class="lbl">부서</td><td>${esc(info.dept)}</td><td class="lbl">팀</td><td>${esc(info.team)}</td></tr>
+      <tr><td class="lbl">입사일자</td><td>${info.hireDate || "-"}</td><td class="lbl">직군</td><td>${esc(info.jobType)}</td></tr>
+      <tr><td class="lbl">신입/경력</td><td colspan="3">${esc(info.entryType)}</td></tr>
+    </table>
+
+    ${careerSection}
+
+    <h2>수습기간 · 호봉상승일</h2>
+    <table class="info-table">
+      <tr><td class="lbl">수습기간</td><td>${probation.start || "-"} ~ ${probation.end || "-"}</td></tr>
+      <tr><td class="lbl">호봉상승일</td><td>${probation.stepUpDate || "-"}</td></tr>
+    </table>
+
+    <h2>3. 최종 급여</h2>
+    <table class="amt-table">
+      <tr><td>급 / 호봉 / 기준연도</td><td>${esc(salary.geup) || "-"}급 / ${esc(salary.hobong) || "-"}호봉 / ${salary.year}년</td></tr>
+      <tr><td>기본급</td><td>${fmtWon(salary.baseSalary)}</td></tr>
+      <tr><td>성장지원비</td><td>${fmtWon(salary.growthSupport)}</td></tr>
+      <tr><td>급식비</td><td>${fmtWon(salary.mealAllowance)}</td></tr>
+      <tr class="total"><td>월 급여</td><td>${fmtWon(d.monthlyPay)}</td></tr>
+    </table>
+    <p class="note">시간외수당(1시간 기준): ${fmtWon(d.overtimeHourlyRate)} · 명절수당(연): ${fmtWon(d.holidayBonusAnnual)} · 직책수당(월): ${fmtWon(salary.positionAllowance)}</p>
+    <table class="amt-table">
+      <tr class="total"><td>연봉총액</td><td>${fmtWon(d.annualTotal)}</td></tr>
+    </table>
+    <p class="note">(월급여 × 12) + 명절수당(연) + 직책수당(연) · 시간외수당 별도</p>
+
+    <script>window.onload = function(){ setTimeout(function(){ window.print(); }, 200); };<\/script>
+  </body></html>`;
+}
+function openPrintView(includeCareer) {
+  const html = buildPrintHTML(includeCareer);
+  const w = window.open("", "_blank");
+  if (!w) { alert("팝업이 차단됐어요. 화면 상단의 '새 탭에서 열기'로 먼저 SharePoint 미리보기 틀 밖으로 나온 뒤 다시 시도해줘."); return; }
+  w.document.open(); w.document.write(html); w.document.close();
+}
+
+// ==== 년-월-일 자동이동 입력 ====
+let segState = {};
+function segKey(scope, field, itemId) { return scope + "-" + field + (itemId != null ? ("-" + itemId) : ""); }
+function getCurrentDateValue(scope, field, itemId) {
+  if (scope === "info") return state.info[field];
+  if (scope === "probation") return state.probation[field];
+  const it = state.items.find(x => x.id === itemId);
+  return it ? it[field] : "";
+}
+function setCurrentDateValue(scope, field, itemId, value) {
+  if (scope === "info") { state.info[field] = value; return; }
+  if (scope === "probation") { state.probation[field] = value; return; }
+  const it = state.items.find(x => x.id === itemId);
+  if (it) it[field] = value;
+}
+function getSeg(key, currentValue, monthOnly) {
+  const cur = segState[key];
+  const reconstructed = cur ? (monthOnly ? `${cur.y}-${cur.m}` : `${cur.y}-${cur.m}-${cur.d}`) : null;
+  if (!cur || (currentValue && currentValue !== reconstructed)) {
+    const parts = (currentValue || "").split("-");
+    segState[key] = monthOnly ? { y: parts[0] || "", m: parts[1] || "" } : { y: parts[0] || "", m: parts[1] || "", d: parts[2] || "" };
+  }
+  return segState[key];
+}
+function segInputHTML(scope, field, itemId, monthOnly) {
+  const key = segKey(scope, field, itemId);
+  const seg = getSeg(key, getCurrentDateValue(scope, field, itemId), monthOnly);
+  const itemArg = itemId != null ? itemId : "null";
+  let html = `<span class="seg-group">
+    <input id="seg-${key}-y" class="y" type="text" inputmode="numeric" placeholder="YYYY" value="${seg.y}" oninput="handleSegInput('${scope}','${field}',${monthOnly},'y',this.value,${itemArg})">
+    <span class="seg-sep">-</span>
+    <input id="seg-${key}-m" class="m" type="text" inputmode="numeric" placeholder="MM" value="${seg.m}" oninput="handleSegInput('${scope}','${field}',${monthOnly},'m',this.value,${itemArg})">`;
+  if (!monthOnly) {
+    html += `<span class="seg-sep">-</span>
+    <input id="seg-${key}-d" class="d" type="text" inputmode="numeric" placeholder="DD" value="${seg.d}" oninput="handleSegInput('${scope}','${field}',${monthOnly},'d',this.value,${itemArg})">`;
+  }
+  html += `</span>`;
+  return html;
+}
+function handleSegInput(scope, field, monthOnly, part, rawValue, itemId) {
+  const maxLen = part === "y" ? 4 : 2;
+  const value = rawValue.replace(/\D/g, "").slice(0, maxLen);
+  const key = segKey(scope, field, itemId);
+  const seg = getSeg(key, getCurrentDateValue(scope, field, itemId), monthOnly);
+  seg[part] = value;
+
+  let nextFocusId = null;
+  if (part === "y" && value.length === 4) nextFocusId = `seg-${key}-m`;
+  else if (part === "m" && value.length === 2 && !monthOnly) nextFocusId = `seg-${key}-d`;
+  const sameFocusId = `seg-${key}-${part}`;
+
+  const complete = monthOnly ? (seg.y.length === 4 && seg.m.length === 2) : (seg.y.length === 4 && seg.m.length === 2 && seg.d.length === 2);
+  const pad2 = s => s.padStart(2, "0");
+  const newValue = complete ? (monthOnly ? `${seg.y}-${pad2(seg.m)}` : `${seg.y}-${pad2(seg.m)}-${pad2(seg.d)}`) : "";
+  setCurrentDateValue(scope, field, itemId, newValue);
+
+  if (scope === "info" && field === "hireDate") recalcProbationAuto();
+  if (scope !== "probation") { const c = computeCareer(); recalcStepUp(c); syncHobongIfAuto(c); }
+
+  render();
+  const focusId = nextFocusId || sameFocusId;
+  const el = document.getElementById(focusId);
+  if (el) { el.focus(); const len = el.value.length; try { el.setSelectionRange(len, len); } catch (e) {} }
+}
+
+// ==== event handlers (전역) ====
+function updateInfo(field, value) {
+  state.info[field] = value;
+  if (field === "hireDate" || field === "entryType") recalcProbationAuto();
+  const c = computeCareer();
+  recalcStepUp(c);
+  syncHobongIfAuto(c);
+  withFocus(render);
+}
+// 계산에 영향 없는 순수 텍스트 필드 - 리렌더 없이 값만 저장 (한글 조합 끊김 방지)
+function updateInfoText(field, value) { state.info[field] = value; }
+function updateProbation(field, value) { state.probation[field] = value; withFocus(render); }
+function updateSalary(field, value) {
+  state.salary[field] = value;
+  if (field === "hobong") state.salary.hobongManual = value !== "";
+  if (["geup","hobong","year"].includes(field)) {
+    const d = computeSalaryDerived(computeCareer());
+    if (d.lookedUpBase) state.salary.baseSalary = String(d.lookedUpBase);
+  }
+  withFocus(render);
+}
+function updateItemField(id, field, value) {
+  const it = state.items.find(x => x.id === id);
+  if (!it) return;
+  it[field] = field === "rate" ? Number(value) : value;
+  const c = computeCareer();
+  recalcStepUp(c);
+  syncHobongIfAuto(c);
+  withFocus(render);
+}
+// 계산에 영향 없는 순수 텍스트 필드 - 리렌더 없이 값만 저장 (한글 조합 끊김 방지)
+function updateItemText(id, field, value) {
+  const it = state.items.find(x => x.id === id);
+  if (!it) return;
+  it[field] = value;
+}
+function addItem(rowType) { state.items.push(newRow(rowType)); render(); }
+function removeItem(id) {
+  state.items = state.items.filter(x => x.id !== id);
+  const c = computeCareer();
+  recalcStepUp(c);
+  syncHobongIfAuto(c);
+  render();
+}
+
+// ==== 렌더링 ====
+function itemRowHTML(it, r) {
+  const meta = ROW_TYPE_META[it.rowType];
+  let head, sub = "", statsHTML;
+  if (it.rowType === "edu") {
+    head = `
+      <span class="pill ${meta.pill}">${meta.label}</span>
+      <select onchange="updateItemField(${it.id},'degree',this.value)">
+        ${DEGREE_OPTIONS.map(d => `<option value="${d.id}" ${it.degree===d.id?"selected":""}>${d.label}</option>`).join("")}
+      </select>
+      <button class="icon-btn no-print" onclick="removeItem(${it.id})">✕</button>
+    `;
+    sub = `
+      <div class="item-sub">
+        <input id="item-${it.id}-school" type="text" placeholder="학교명 입력" value="${esc(it.school)}" oninput="updateItemText(${it.id},'school',this.value)">
+        <input id="item-${it.id}-major" type="text" placeholder="학과 입력" value="${esc(it.major)}" oninput="updateItemText(${it.id},'major',this.value)">
+      </div>`;
+    statsHTML = `
+      <div class="stat-grid cols2">
+        <div class="stat"><p class="lbl">개월수</p><p class="val">${fmtYM(r.actual)}</p></div>
+        <div class="stat teal"><p class="lbl">호봉</p><p class="val">${r.grade}</p></div>
+      </div>`;
+  } else {
+    const placeholder = it.rowType === "external" ? "회사명 입력" : it.rowType === "wvcareer" ? "부서/팀 입력" : "복무 부대/기관 입력";
+    head = `
+      <span class="pill ${meta.pill}">${meta.label}</span>
+      <input type="text" placeholder="${placeholder}" value="${esc(it.detail)}" oninput="updateItemText(${it.id},'detail',this.value)">
+      <button class="icon-btn no-print" onclick="removeItem(${it.id})">✕</button>
+    `;
+    const rateCell = it.rowType === "external"
+      ? `<div class="stat"><p class="lbl">인정률</p><select id="item-${it.id}-rate" onchange="updateItemField(${it.id},'rate',this.value)">
+          <option value="1" ${it.rate==1?"selected":""}>상 100%</option>
+          <option value="0.5" ${it.rate==0.5?"selected":""}>중 50%</option>
+          <option value="0" ${it.rate==0?"selected":""}>하 0%</option>
+        </select></div>`
+      : `<div class="stat"><p class="lbl">인정률</p><p class="val">100%</p></div>`;
+    statsHTML = `
+      <div class="stat-grid cols3">
+        <div class="stat"><p class="lbl">년도수</p><p class="val">${fmtYM(r.actual)}</p></div>
+        ${rateCell}
+        <div class="stat"><p class="lbl">인정개월(자동)</p><p class="val">${r.autoRecognized}</p></div>
+        <div class="stat amber"><p class="lbl">최종인정개월</p><input id="item-${it.id}-finalOverride" type="number" placeholder="${r.autoRecognized}" value="${esc(it.finalOverride)}" oninput="updateItemField(${it.id},'finalOverride',this.value)"></div>
+        <div class="stat teal"><p class="lbl">호봉</p><p class="val">${r.grade}</p></div>
+        <div class="stat"><p class="lbl">잔여개월</p><p class="val">${r.remainder > 0 ? "+" + r.remainder : "0"}</p></div>
+      </div>`;
+  }
+  const dates = `
+    <div class="item-dates">
+      ${segInputHTML("item", "start", it.id, it.rowType === "edu")}
+      <span class="hint">~</span>
+      ${segInputHTML("item", "end", it.id, it.rowType === "edu")}
+      ${it.rowType === "edu" ? '<span class="hint">참고용</span>' : ""}
+    </div>`;
+  return `<div class="item-card">
+    <div class="item-head">${head}</div>
+    ${sub}
+    ${dates}
+    ${statsHTML}
+  </div>`;
+}
+
+function render() {
+  const info = state.info, probation = state.probation, salary = state.salary;
+  const c = computeCareer();
+  const d = computeSalaryDerived(c);
+  const showProbation = !CONTRACT_TYPES_NO_PROBATION.includes(info.jobType);
+  const hideCareerInPrint = CONTRACT_TYPES_NO_PROBATION.includes(info.jobType);
+
+  const probationNote = showProbation ? "" : "";
+
+  const html = `
+    <div class="title-row">
+      <div>
+        <h1>급호봉 계산기</h1>
+      </div>
+      <div class="badge-total"><span class="lbl">최종</span> <span class="val">${salary.geup ? esc(salary.geup) + "급 " : ""}${salary.hobong || c.total}</span> <span class="lbl">호봉</span></div>
+    </div>
+    <div class="btnrow no-print">
+      <button class="btn btn-dark" onclick="openPrintView(true)">⬇ PDF (전체, 경력산정 포함)</button>
+      <button class="btn btn-dark" onclick="openPrintView(false)">⬇ PDF (직원용 요약)</button>
+    </div>
+
+    <p class="section-title">1. 기본정보</p>
+    <div class="card">
+      <p class="card-label">인적사항</p>
+      <div class="grid-2">
+        <div class="field"><label>성명</label><input type="text" placeholder="이름" value="${esc(info.name)}" oninput="updateInfoText('name',this.value)"></div>
+        <div class="field"><label>직책</label><input type="text" placeholder="예: 대리" value="${esc(info.position)}" oninput="updateInfoText('position',this.value)"></div>
+        <div class="field"><label>부서</label><input type="text" placeholder="예: 피플&컬처실" value="${esc(info.dept)}" oninput="updateInfoText('dept',this.value)"></div>
+        <div class="field"><label>팀</label><input type="text" placeholder="예: 피플팀" value="${esc(info.team)}" oninput="updateInfoText('team',this.value)"></div>
+        <div class="field"><label>입사일자</label>${segInputHTML("info", "hireDate", null, false)}</div>
+        <div class="field"><label>직군</label>
+          <select id="info-jobType" onchange="updateInfo('jobType',this.value)">
+            ${JOB_TYPE_OPTIONS.map(o => `<option value="${o}" ${info.jobType===o?"selected":""}>${o}</option>`).join("")}
+          </select>
+        </div>
+        <div class="field span2"><label>신입 / 경력</label>
+          <div class="toggle-row">
+            ${["신입","경력"].map(v => `<button class="toggle-btn ${info.entryType===v?"active":""}" onclick="updateInfo('entryType','${v}')">${v}</button>`).join("")}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="${hideCareerInPrint ? "print-hide-career" : ""}">
+      <p class="section-title">2. 경력산정</p>
+      <div class="btnrow no-print" style="justify-content:flex-start;margin-top:0;">
+        <button class="btn btn-teal" onclick="addItem('edu')">+ 학력</button>
+        <button class="btn btn-sky" onclick="addItem('external')">+ 외부경력</button>
+        <button class="btn btn-violet" onclick="addItem('wvcareer')">+ 월드비전 경력</button>
+        <button class="btn btn-slate" onclick="addItem('military')">+ 군복무</button>
+      </div>
+      ${c.rows.map(r => itemRowHTML(state.items.find(x => x.id === r.id), r)).join("")}
+    </div>
+
+    <div class="card card-amber">
+      <p class="card-label amber">수습기간 · 호봉상승일</p>
+      <div class="field" style="margin-bottom:10px;">
+        <label>수습기간 <span style="color:#0f766e;">(입사일자·신입-경력 기준 자동계산, 수기 수정 가능)</span></label>
+        <div class="item-dates">
+          ${segInputHTML("probation", "start", null, false)}
+          <span class="hint">~</span>
+          ${segInputHTML("probation", "end", null, false)}
+        </div>
+      </div>
+      <div class="field">
+        <label>호봉상승일 (입사일+잔여개월 기준 자동계산, 수기 수정 가능)</label>
+        ${segInputHTML("probation", "stepUpDate", null, false)}
+      </div>
+    </div>
+
+    <div class="card">
+      <p class="card-label">합산 내역</p>
+      <div class="row-line"><span class="label">학력 최종 호봉</span><span class="value">${c.eduGrade}호봉</span></div>
+      <div class="row-line"><span class="label">외부경력 최종 호봉</span><span class="value">${c.externalGrade}호봉</span></div>
+      <div class="row-line"><span class="label">월드비전 최종 호봉</span><span class="value">${c.wvGrade}호봉</span></div>
+      <div class="row-line"><span class="label">군복무 최종 호봉</span><span class="value">${c.militaryGrade}호봉</span></div>
+      <div class="row-line"><span class="label">잔여개월 합산</span><span class="value">${c.remainderSum}개월</span></div>
+      <div class="row-line"><span class="label">잔여개월 재환산 호봉</span><span class="value">${c.bonusGrade}호봉 (잔여 ${c.finalRemainder}개월)</span></div>
+      <div class="total-line"><span class="label">최종 호봉</span><span class="value">${c.total}호봉</span></div>
+    </div>
+
+    <p class="section-title" style="margin-top:24px;">3. 최종 급여</p>
+    <div class="card">
+      <div class="grid-3">
+        <div class="field"><label>급</label><input id="salary-geup" type="text" inputmode="numeric" placeholder="예: 6" value="${esc(salary.geup)}" oninput="updateSalary('geup',this.value)"></div>
+        <div class="field"><label>호봉</label><input id="salary-hobong" type="text" inputmode="numeric" placeholder="${c.total}" value="${esc(salary.hobong)}" oninput="updateSalary('hobong',this.value)"></div>
+        <div class="field"><label>기준연도</label>
+          <select id="salary-year" onchange="updateSalary('year',this.value)">
+            ${Object.keys(SALARY_TABLES).map(y => `<option value="${y}" ${salary.year===y?"selected":""}>${y}년 급호봉표</option>`).join("")}
+          </select>
+        </div>
+      </div>
+      <div class="btnrow no-print" style="justify-content:flex-start;margin:10px 0 6px;">
+        <p class="small-note" style="margin:0;">호봉은 경력산정 결과(${c.total}호봉)를 자동으로 따라가요 · 직접 입력하면 그 값을 우선 사용해요</p>
+      </div>
+      ${salary.geup && salary.hobong ? `<p class="lookup-note ${d.lookedUpBase ? "lookup-ok" : "lookup-warn"}">${d.lookedUpBase ? "✓ " + salary.year + "년 급호봉표에서 기본급 자동 조회됨" : "⚠ 해당 급/호봉 조합의 데이터가 없어요 — 직접 입력해줘"}</p>` : ""}
+
+      <div class="amount-row">
+        <span class="lbl">기본급</span>
+        <div class="amount-input-wrap">
+          <input type="text" inputmode="numeric" value="${salary.baseSalary ? Number(salary.baseSalary).toLocaleString("ko-KR") : ""}" placeholder="급/호봉 입력 시 자동 조회" id="salary-baseSalary" oninput="updateSalary('baseSalary', this.value.replace(/[^0-9]/g,''))">
+          ${showProbation ? `<p class="probation-note">수습시(90%) ${fmtWon((Number(salary.baseSalary)||0)*0.9)}</p>` : ""}
+        </div>
+      </div>
+      <div class="amount-row">
+        <span class="lbl">성장지원비 <span style="font-size:11px;color:#94a3b8;">(일괄)</span></span>
+        <div class="amount-input-wrap">
+          <input type="text" inputmode="numeric" value="${salary.growthSupport ? Number(salary.growthSupport).toLocaleString("ko-KR") : ""}" id="salary-growthSupport" oninput="updateSalary('growthSupport', this.value.replace(/[^0-9]/g,''))">
+          ${showProbation ? `<p class="probation-note">수습시(90%) ${fmtWon((Number(salary.growthSupport)||0)*0.9)}</p>` : ""}
+        </div>
+      </div>
+      <div class="amount-row">
+        <span class="lbl">급식비 <span style="font-size:11px;color:#94a3b8;">(일괄)</span></span>
+        <div class="amount-input-wrap">
+          <input type="text" inputmode="numeric" value="${salary.mealAllowance ? Number(salary.mealAllowance).toLocaleString("ko-KR") : ""}" id="salary-mealAllowance" oninput="updateSalary('mealAllowance', this.value.replace(/[^0-9]/g,''))">
+          ${showProbation ? `<p class="probation-note">수습시(90%) ${fmtWon((Number(salary.mealAllowance)||0)*0.9)}</p>` : ""}
+        </div>
+      </div>
+
+      <div class="total-line" style="margin-top:14px;">
+        <span class="label">월 급여</span>
+        <div style="text-align:right;">
+          <span class="value" style="font-size:17px;">${fmtWon(d.monthlyPay)}</span>
+          ${showProbation ? `<p class="probation-note" style="color:#d97706;">수습시(90%) ${fmtWon(d.monthlyPay*0.9)}</p>` : ""}
+        </div>
+      </div>
+      <p class="small-note">기본급 + 성장지원비 + 급식비</p>
+
+      <div class="divider">
+        <div class="row-line"><span class="label">시간외수당 <span style="font-size:11px;color:#94a3b8;">(1시간 기준)</span></span><span class="value">${fmtWon(d.overtimeHourlyRate)}</span></div>
+        <p class="small-note">(월급여 + 직책수당 + 명절수당/12) ÷ 209 × 1.5</p>
+      </div>
+
+      <div class="divider">
+        <div class="amount-row" style="margin-bottom:4px;">
+          <span class="lbl">명절수당 <span style="font-size:11px;color:#94a3b8;">(회당, 연 2회 고정)</span></span>
+          <input type="text" inputmode="numeric" style="width:150px;text-align:right;" value="${salary.holidayBonusPerEvent ? Number(salary.holidayBonusPerEvent).toLocaleString("ko-KR") : ""}" id="salary-holidayBonusPerEvent" oninput="updateSalary('holidayBonusPerEvent', this.value.replace(/[^0-9]/g,''))">
+        </div>
+        <div class="row-line"><span class="label">→ 명절수당 (연)</span><span class="value">${fmtWon(d.holidayBonusAnnual)}</span></div>
+      </div>
+
+      <div class="divider">
+        <div class="amount-row" style="margin-bottom:2px;">
+          <span class="lbl">직책수당 <span style="font-size:11px;color:#94a3b8;">(월, 자유입력)</span></span>
+          <input type="text" inputmode="numeric" style="width:150px;text-align:right;" placeholder="0" value="${salary.positionAllowance ? Number(salary.positionAllowance).toLocaleString("ko-KR") : ""}" id="salary-positionAllowance" oninput="updateSalary('positionAllowance', this.value.replace(/[^0-9]/g,''))">
+        </div>
+        <p class="small-note">해당자만 입력 · 연봉엔 ×12로 반영</p>
+      </div>
+
+      <div class="total-line" style="border-top:2px solid #1e293b;">
+        <span class="label" style="font-size:15px;">연봉총액</span>
+        <span class="value" style="font-size:19px;">${fmtWon(d.annualTotal)}</span>
+      </div>
+      <p class="small-note">(월급여 × 12) + 명절수당(연) + 직책수당(연) · 시간외수당 별도</p>
+    </div>
+
+    <p class="foot-note">검증용 프로토타입 · History 이벤트(정규직 전환·휴직복직·징계·재입사) 조정 로직은 다음 단계에서 추가 예정</p>
+  `;
+  document.getElementById("app").innerHTML = html;
+}
+
+window.addEventListener("beforeprint", () => {});
+
+// ==== 급호봉표 연도별 파일 자동 로드 ====
+// 같은 폴더에 salary-table-YYYY.json 파일을 올리면, 여기서 자동으로 찾아서 SALARY_TABLES에 추가함.
+// (예: 2027년 표 나오면 salary-table-2027.json 파일만 이 HTML과 같은 폴더에 올리면 됨. 코드 수정/재배포 불필요)
+async function loadYearlyTables() {
+  const now = new Date().getFullYear();
+  const years = [];
+  for (let y = now - 3; y <= now + 8; y++) years.push(String(y));
+  const results = await Promise.allSettled(
+    years.map(y =>
+      fetch(`./salary-table-${y}.json`, { cache: "no-store" }).then(r => {
+        if (!r.ok) throw new Error("not found");
+        return r.json();
+      }).then(data => ({ y, data }))
+    )
+  );
+  let changed = false;
+  results.forEach(res => {
+    if (res.status === "fulfilled" && res.value && res.value.data) {
+      SALARY_TABLES[res.value.y] = res.value.data;
+      changed = true;
+    }
+  });
+  if (changed) render();
+}
+
+render();
+loadYearlyTables(); // 실패해도(로컬 파일로 열었을 때 등) 무시되고 기본 내장 2026년 표로 계속 동작함
+</script>
+</body>
+</html>
