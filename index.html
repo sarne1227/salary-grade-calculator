@@ -64,6 +64,7 @@
   .seg-group input.m, .seg-group input.d { width: 38px; }
   .seg-group input:focus { box-shadow: none !important; }
   .seg-sep { color: #cbd5e1; font-size: 12px; }
+  .native-date { font-size: 14px; padding: 8px 10px; }
   .hint { font-size: 10px; color: #94a3b8; white-space: nowrap; flex-shrink: 0; }
   .stat-grid { display: grid; gap: 6px; }
   .stat-grid.cols2 { grid-template-columns: 1fr 1fr; }
@@ -452,6 +453,18 @@ function getSeg(key, currentValue, monthOnly) {
   }
   return segState[key];
 }
+function nativeDateHTML(scope, field, itemId, monthOnly) {
+  const value = getCurrentDateValue(scope, field, itemId);
+  const itemArg = itemId != null ? itemId : "null";
+  const type = monthOnly ? "month" : "date";
+  return `<input type="${type}" value="${value || ""}" onchange="handleNativeDate('${scope}','${field}',this.value,${itemArg})" class="native-date">`;
+}
+function handleNativeDate(scope, field, value, itemId) {
+  setCurrentDateValue(scope, field, itemId, value);
+  if (scope === "info" && field === "hireDate") recalcProbationAuto();
+  if (scope !== "probation" && scope !== "contract") { const c = computeCareer(); recalcStepUp(c); syncHobongIfAuto(c); }
+  render();
+}
 function segInputHTML(scope, field, itemId, monthOnly) {
   const key = segKey(scope, field, itemId);
   const seg = getSeg(key, getCurrentDateValue(scope, field, itemId), monthOnly);
@@ -586,9 +599,9 @@ function itemRowHTML(it, r) {
   }
   const dates = `
     <div class="item-dates">
-      ${segInputHTML("item", "start", it.id, it.rowType === "edu")}
+      ${nativeDateHTML("item", "start", it.id, it.rowType === "edu")}
       <span class="hint">~</span>
-      ${segInputHTML("item", "end", it.id, it.rowType === "edu")}
+      ${nativeDateHTML("item", "end", it.id, it.rowType === "edu")}
       ${it.rowType === "edu" ? '<span class="hint">참고용</span>' : ""}
     </div>`;
   return `<div class="item-card">
@@ -628,7 +641,7 @@ function render() {
         <div class="field"><label>직책</label><input type="text" placeholder="예: 대리" value="${esc(info.position)}" oninput="updateInfoText('position',this.value)"></div>
         <div class="field"><label>부서</label><input type="text" placeholder="예: 피플&컬처실" value="${esc(info.dept)}" oninput="updateInfoText('dept',this.value)"></div>
         <div class="field"><label>팀</label><input type="text" placeholder="예: 피플팀" value="${esc(info.team)}" oninput="updateInfoText('team',this.value)"></div>
-        <div class="field"><label>입사일자</label>${segInputHTML("info", "hireDate", null, false)}</div>
+        <div class="field"><label>입사일자</label>${nativeDateHTML("info", "hireDate", null, false)}</div>
         <div class="field"><label>직군</label>
           <select id="info-jobType" onchange="updateInfo('jobType',this.value)">
             ${JOB_TYPE_OPTIONS.map(o => `<option value="${o}" ${info.jobType===o?"selected":""}>${o}</option>`).join("")}
@@ -659,14 +672,14 @@ function render() {
       <div class="field" style="margin-bottom:10px;">
         <label>수습기간 <span style="color:#0f766e;">(입사일자·신입-경력 기준 자동계산, 수기 수정 가능)</span></label>
         <div class="item-dates">
-          ${segInputHTML("probation", "start", null, false)}
+          ${nativeDateHTML("probation", "start", null, false)}
           <span class="hint">~</span>
-          ${segInputHTML("probation", "end", null, false)}
+          ${nativeDateHTML("probation", "end", null, false)}
         </div>
       </div>
       <div class="field">
         <label>호봉상승일 (입사일+잔여개월 기준 자동계산, 수기 수정 가능)</label>
-        ${segInputHTML("probation", "stepUpDate", null, false)}
+        ${nativeDateHTML("probation", "stepUpDate", null, false)}
       </div>
     </div>
     ` : `
@@ -675,9 +688,9 @@ function render() {
       <div class="field">
         <label>계약 시작일 ~ 종료일 (수기 입력)</label>
         <div class="item-dates">
-          ${segInputHTML("contract", "start", null, false)}
+          ${nativeDateHTML("contract", "start", null, false)}
           <span class="hint">~</span>
-          ${segInputHTML("contract", "end", null, false)}
+          ${nativeDateHTML("contract", "end", null, false)}
         </div>
       </div>
     </div>
